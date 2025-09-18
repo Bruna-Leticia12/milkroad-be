@@ -18,23 +18,20 @@ public class EntregaController {
         this.entregaService = entregaService;
     }
 
-    @PostMapping("/{clienteId}")
-    public ResponseEntity<Entrega> criarEntrega(@PathVariable Long clienteId, @RequestParam String dataEntrega) {
-        LocalDate data = LocalDate.parse(dataEntrega);
-        return ResponseEntity.ok(entregaService.criarEntrega(clienteId, data));
-    }
-
+    // Listar entregas de um cliente (ADMIN ou CLIENTE dono)
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<List<Entrega>> listarPorCliente(@PathVariable Long clienteId) {
         return ResponseEntity.ok(entregaService.listarEntregasCliente(clienteId));
     }
 
+    // Listar entregas de uma data específica
     @GetMapping("/data/{data}")
     public ResponseEntity<List<Entrega>> listarPorData(@PathVariable String data) {
         LocalDate dataEntrega = LocalDate.parse(data);
         return ResponseEntity.ok(entregaService.listarEntregasPorData(dataEntrega));
     }
 
+    // Cancelar uma entrega específica
     @PutMapping("/{entregaId}/cancelar")
     public ResponseEntity<?> cancelarEntrega(@PathVariable Long entregaId) {
         try {

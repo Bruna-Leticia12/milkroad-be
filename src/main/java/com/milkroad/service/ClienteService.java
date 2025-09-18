@@ -29,37 +29,42 @@ public class ClienteService {
         return clienteRepository.save(cliente);
     }
 
-    // ✅ Listar todos os clientes
+    // Listar todos
     public List<Cliente> listarClientes() {
         return clienteRepository.findAll();
     }
 
-    // ✅ Listar somente clientes ativos
+    // Listar ativos
     public List<Cliente> listarClientesAtivos() {
         return clienteRepository.findByAtivo(true);
     }
 
-    // ✅ Listar somente clientes inativos
+    // Listar inativos
     public List<Cliente> listarClientesInativos() {
         return clienteRepository.findByAtivo(false);
     }
 
-    // ⚠️ Cancelamento de entrega (a regra ideal seria em EntregaService)
-    public Cliente cancelarEntrega(Long id) {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    // Buscar cliente por email (para autenticação ou dados do perfil)
+    public Cliente buscarPorEmail(String email) {
+        return clienteRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com email: " + email));
+    }
+
+    // Cancelar entrega de um cliente (pela própria conta)
+    public Cliente cancelarEntregaPorEmail(String email) {
+        Cliente cliente = buscarPorEmail(email);
 
         LocalDate hoje = LocalDate.now();
         LocalTime agora = LocalTime.now();
 
-        // Só bloqueia se for a entrega de hoje e já passou das 7h
+        // Só bloqueia cancelamento de entrega do dia atual depois das 07h
         if (agora.isAfter(LocalTime.of(7, 0))) {
             throw new CancelamentoInvalidoException(
-                    "Cancelamento de entrega no dia atual só é permitido até as 07h."
+                    "Cancelamento da entrega do dia atual só é permitido até as 07h."
             );
         }
 
-        cliente.setAtivo(false); // marcar como indisponível
+        cliente.setAtivo(false); // marca indisponível
         return clienteRepository.save(cliente);
     }
 }

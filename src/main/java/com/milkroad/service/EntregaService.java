@@ -28,7 +28,7 @@ public class EntregaService {
         LocalDate hoje = LocalDate.now();
         LocalDate fim = hoje.plusMonths(1); // gera 1 mês de entregas futuras
 
-        Long clienteId = cliente.getId(); // ✅ variável final para usar no lambda
+        Long clienteId = cliente.getId(); // variável final para usar no lambda
 
         for (LocalDate data = hoje; data.isBefore(fim); data = data.plusDays(1)) {
             if (data.getDayOfWeek() != DayOfWeek.SATURDAY && data.getDayOfWeek() != DayOfWeek.SUNDAY) {
@@ -77,7 +77,7 @@ public class EntregaService {
     }
 
     /**
-     * ✅ Gera automaticamente as entregas do próximo mês todo dia 28 às 02:00 da manhã.
+     * Gera automaticamente as entregas do próximo mês todo dia 28 às 02:00 da manhã.
      */
     @Scheduled(cron = "0 0 2 28 * *") // minuto=0, hora=2, dia=28, todo mês
     public void gerarEntregasProximoMes() {
@@ -88,14 +88,14 @@ public class EntregaService {
         List<Cliente> clientes = clienteRepository.findByAtivo(true);
 
         for (Cliente cliente : clientes) {
-            Long clienteId = cliente.getId(); // ✅ variável final para usar no lambda
+            Long clienteId = cliente.getId(); // variável final para usar no lambda
 
             LocalDate data = primeiroDiaProximoMes;
             while (!data.isAfter(ultimoDiaProximoMes)) {
 
                 if (data.getDayOfWeek() != DayOfWeek.SATURDAY && data.getDayOfWeek() != DayOfWeek.SUNDAY) {
 
-                    final LocalDate dataAtual = data; // ✅ variável final para usar no lambda
+                    final LocalDate dataAtual = data; // variável final para usar no lambda
 
                     boolean existe = entregaRepository.findByClienteId(clienteId)
                             .stream()
@@ -115,6 +115,6 @@ public class EntregaService {
             }
         }
 
-        System.out.println("✅ Entregas do próximo mês foram geradas automaticamente!");
+        System.out.println("Entregas do próximo mês foram geradas automaticamente!");
     }
 }

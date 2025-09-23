@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Entity
 @Data
 @Builder
@@ -32,7 +31,7 @@ public class Cliente {
 
     private boolean ativo = true;
 
-    @JsonIgnore   //não envia senha no JSON
+    @JsonIgnore
     private String senha;
 
     @Enumerated(EnumType.STRING)

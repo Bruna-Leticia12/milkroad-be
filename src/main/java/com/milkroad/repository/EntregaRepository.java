@@ -11,4 +11,5 @@ import java.util.List;
 public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     List<Entrega> findByClienteId(Long clienteId);
     List<Entrega> findByDataEntrega(LocalDate dataEntrega);
+    List<Entrega> findByDataEntregaAndConfirmadaTrue(LocalDate dataEntrega);
 }

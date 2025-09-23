@@ -16,3 +16,7 @@ spring:
 
 server:
   port: 8080
+
+google:
+  api:
+    key: AIzaSyAhxn4F2okcGS6WJK0vyuj1qCuD-A0JIcI

@@ -4,7 +4,6 @@ import com.milkroad.security.JwtAuthenticationFilter;
 import com.milkroad.security.UsuarioDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -39,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()     // login + registro de admin abertos
                         .requestMatchers("/api/clientes/**").hasRole("ADMIN") // só admin gerencia clientes
                         .requestMatchers("/api/entregas/**").hasAnyRole("ADMIN", "CLIENTE")
+                        .requestMatchers("/api/rotas/**").hasRole("ADMIN")   // apenas ADMIN acessa rotas
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

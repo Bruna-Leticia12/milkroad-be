@@ -31,9 +31,10 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // 🔑 LOGIN
+    // LOGIN
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    //public LoginResponse login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getSenha())
@@ -43,14 +44,21 @@ public class AuthController {
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
             String token = jwtUtil.generateToken(cliente.getEmail(), cliente.getPerfil().name());
-            return new LoginResponse(token);
+            return ResponseEntity.ok(new LoginResponse(token));
+            //return new LoginResponse(token);
+
 
         } catch (AuthenticationException e) {
-            throw new RuntimeException("Credenciais inválidas");
+            return ResponseEntity.status(401).body(new ErrorMsg("Unauthorized", "Credenciais inválidas"));
         }
-    }
 
-    // 👑 REGISTRO DE ADMIN
+//        } catch (AuthenticationException e) {
+//            throw new RuntimeException("Credenciais inválidas");
+//        }
+    }
+    record ErrorMsg(String status, String message) {}
+
+    //REGISTRO DE ADMIN
     @PostMapping("/register-admin")
     public ResponseEntity<?> registrarAdmin(@RequestBody Cliente admin) {
         if (clienteRepository.findByEmail(admin.getEmail()).isPresent()) {

@@ -29,15 +29,18 @@ public class RouteService {
     private final ClienteRepository clienteRepository;
     private final EntregaRepository entregaRepository;
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest;
+    //private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
     public RouteService(GeoService geoService,
                         ClienteRepository clienteRepository,
-                        EntregaRepository entregaRepository) {
+                        EntregaRepository entregaRepository,
+                        RestTemplate rest) {
         this.geoService = geoService;
         this.clienteRepository = clienteRepository;
         this.entregaRepository = entregaRepository;
+        this.rest = rest;
     }
 
     /**
@@ -130,7 +133,7 @@ public class RouteService {
             List<RouteStopDTO> stops = new ArrayList<>();
             double totalDistanceMeters = 0.0;
 
-            int nWaypoints = waypoints.size();
+            //int nWaypoints = waypoints.size();
             for (int legIdx = 0; legIdx < legs.size(); legIdx++) {
                 JsonNode leg = legs.get(legIdx);
                 double legDistance = leg.path("distance").path("value").asDouble(0.0); // metros

@@ -17,6 +17,9 @@ spring:
 server:
   port: 8080
 
+jwt:
+  secret: ${JWT_SECRET:DefaultSecretKey_ChangeThis_1234567890_ABCD}
+
 google:
   api:
     key: AIzaSyAhxn4F2okcGS6WJK0vyuj1qCuD-A0JIcI

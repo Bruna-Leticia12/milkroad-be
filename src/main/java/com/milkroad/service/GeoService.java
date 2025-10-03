@@ -13,8 +13,13 @@ public class GeoService {
     @Value("${google.api.key:}")
     private String googleApiKey;
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest;
+    //private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
+
+    public GeoService(RestTemplate rest) {
+        this.rest = rest;
+    }
 
     public double[] geocodeCliente(Cliente cliente) {
         if (googleApiKey == null || googleApiKey.isBlank()) {
@@ -27,6 +32,13 @@ public class GeoService {
         try {
             String response = rest.getForObject(url, String.class, address, googleApiKey);
             JsonNode root = mapper.readTree(response);
+
+            String status = root.path("status").asText("");
+            if (!"OK".equals(status)) {
+                String err = root.path("error_message").asText("");
+                throw new RuntimeException("Geocoding API status=" + status + " message=" + err);
+            }
+
             JsonNode results = root.path("results");
             if (results.isArray() && results.size() > 0) {
                 JsonNode location = results.get(0).path("geometry").path("location");

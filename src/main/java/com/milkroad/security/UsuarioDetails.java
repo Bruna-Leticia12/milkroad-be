@@ -18,6 +18,7 @@ public class UsuarioDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        // Sempre prefixa com ROLE_
         return List.of(new SimpleGrantedAuthority("ROLE_" + cliente.getPerfil().name()));
     }
 
@@ -28,7 +29,7 @@ public class UsuarioDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return cliente.getEmail(); // login pelo e-mail
+        return cliente.getEmail(); // login via e-mail
     }
 
     @Override

@@ -13,6 +13,7 @@ public class ClienteResponseDTO {
     private String bairro;
     private String cidade;
     private String cep;
+    private String email;
     private boolean ativo;
     private String perfil;
 }

@@ -12,5 +12,5 @@ public class ClienteRequestDTO {
     private String bairro;
     private String cidade;
     private String cep;
-    private String perfil; // ADMIN ou CLIENTE
+    private String email;
 }

@@ -140,34 +140,34 @@ public class RouteService {
                 totalDistanceMeters += legDistance;
             }
 
-        // montar stops na ordem otimizada
-        for (int pos = 0; pos < optimizedOrder.size(); pos++) {
-            int originalIndex = optimizedOrder.get(pos); // índice na lista 'waypoints'
-            WaypointInfo wp = waypoints.get(originalIndex);
+            // montar stops na ordem otimizada
+            for (int pos = 0; pos < optimizedOrder.size(); pos++) {
+                int originalIndex = optimizedOrder.get(pos); // índice na lista 'waypoints'
+                WaypointInfo wp = waypoints.get(originalIndex);
 
-            // a distância from previous é leg at index pos (origin->first = leg0, etc)
-            JsonNode legForThisStop = legs.get(pos);
-            double distFromPrev = legForThisStop.path("distance").path("value").asDouble(0.0);
+                // a distância from previous é leg at index pos (origin->first = leg0, etc)
+                JsonNode legForThisStop = legs.get(pos);
+                double distFromPrev = legForThisStop.path("distance").path("value").asDouble(0.0);
 
-            RouteStopDTO stop = new RouteStopDTO(
-                    wp.entrega.getId(),
-                    wp.cliente.getId(),
-                    wp.cliente.getNome(),
-                    wp.address,
-                    wp.lat,
-                    wp.lng,
-                    distFromPrev,
-                    pos + 1
+                RouteStopDTO stop = new RouteStopDTO(
+                        wp.entrega.getId(),
+                        wp.cliente.getId(),
+                        wp.cliente.getNome(),
+                        wp.address,
+                        wp.lat,
+                        wp.lng,
+                        distFromPrev,
+                        pos + 1
+                );
+                stops.add(stop);
+            }
+
+            // retorna conforme o DTO que você mandou
+            return new RouteDTO(
+                    date.toString(),
+                    totalDistanceMeters,
+                    stops
             );
-            stops.add(stop);
-        }
-
-        // retorna conforme o DTO que você mandou
-        return new RouteDTO(
-                date.toString(),
-                totalDistanceMeters,
-                stops
-        );
 
         } catch (Exception ex) {
             throw new RuntimeException("Erro ao gerar rota otimizada: " + ex.getMessage(), ex);

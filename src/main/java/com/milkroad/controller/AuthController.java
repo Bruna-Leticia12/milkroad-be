@@ -33,7 +33,6 @@ public class AuthController {
 
     // LOGIN
     @PostMapping("/login")
-    //public LoginResponse login(@RequestBody LoginRequest request) {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -44,21 +43,25 @@ public class AuthController {
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
             String token = jwtUtil.generateToken(cliente.getEmail(), cliente.getPerfil().name());
-            return ResponseEntity.ok(new LoginResponse(token));
-            //return new LoginResponse(token);
 
+            LoginResponse response = new LoginResponse(
+                    token,
+                    cliente.getId(),
+                    cliente.getNome(),
+                    cliente.getPerfil().name(),
+                    cliente.getEmail()
+            );
+
+            return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(new ErrorMsg("Unauthorized", "Credenciais inválidas"));
         }
-
-//        } catch (AuthenticationException e) {
-//            throw new RuntimeException("Credenciais inválidas");
-//        }
     }
+
     record ErrorMsg(String status, String message) {}
 
-    //REGISTRO DE ADMIN
+    // REGISTRO DE ADMIN
     @PostMapping("/register-admin")
     public ResponseEntity<?> registrarAdmin(@RequestBody Cliente admin) {
         if (clienteRepository.findByEmail(admin.getEmail()).isPresent()) {

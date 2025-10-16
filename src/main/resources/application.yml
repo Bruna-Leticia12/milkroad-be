@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/milkroad?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     username: root
-    password: 794613852
+    password: ${ROOT_KEY}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,4 +22,4 @@ jwt:
 
 google:
   api:
-    key: AIzaSyAhxn4F2okcGS6WJK0vyuj1qCuD-A0JIcI
+    key: ${GOOGLE_API_KEY}

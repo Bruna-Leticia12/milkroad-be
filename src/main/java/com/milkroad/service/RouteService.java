@@ -161,8 +161,6 @@ public class RouteService {
                 );
                 stops.add(stop);
             }
-
-            // retorna conforme o DTO que você mandou
             return new RouteDTO(
                     date.toString(),
                     totalDistanceMeters,
@@ -174,7 +172,6 @@ public class RouteService {
         }
     }
 
-    // helper: monta endereço legível a partir do cliente
     private String buildAddress(Cliente c) {
         StringBuilder sb = new StringBuilder();
         if (c.getLogradouro() != null) sb.append(c.getLogradouro());
@@ -185,7 +182,6 @@ public class RouteService {
         return sb.toString();
     }
 
-    // url-encode usando UTF-8
     private String encode(String s) {
         return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }

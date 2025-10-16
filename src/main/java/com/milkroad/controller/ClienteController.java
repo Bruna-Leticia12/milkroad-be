@@ -22,7 +22,7 @@ public class ClienteController {
     @Autowired
     private ClienteService clienteService;
 
-    // Criar cliente (somente ADMIN pode cadastrar novos clientes)
+    // Criar cliente (somente ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ClienteResponseDTO> criarCliente(@RequestBody ClienteRequestDTO dto) {
@@ -91,9 +91,6 @@ public class ClienteController {
         }
     }
 
-    // ========================
-    // Métodos auxiliares
-    // ========================
     private ClienteResponseDTO mapToResponse(Cliente c) {
         ClienteResponseDTO dto = new ClienteResponseDTO();
         dto.setId(c.getId());

@@ -17,10 +17,6 @@ public class RouteController {
         this.routeService = routeService;
     }
 
-    /**
-     * Gera rota otimizada de entregas para uma data específica
-     * Somente ADMIN deve consumir este endpoint
-     */
     @GetMapping("/data/{data}")
     public ResponseEntity<RouteDTO> rotaPorData(@PathVariable String data) {
         LocalDate d = LocalDate.parse(data);

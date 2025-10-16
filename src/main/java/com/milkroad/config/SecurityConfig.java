@@ -69,7 +69,6 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // Configuração de CORS (libera para o Angular em localhost:4200 durante dev)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

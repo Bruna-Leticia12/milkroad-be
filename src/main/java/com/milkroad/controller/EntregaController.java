@@ -20,7 +20,6 @@ public class EntregaController {
         this.entregaService = entregaService;
     }
 
-    // Converter Entrega -> EntregaDTO
     private EntregaDTO toDTO(Entrega entrega) {
         return new EntregaDTO(
                 entrega.getId(),

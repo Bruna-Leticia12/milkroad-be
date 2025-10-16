@@ -53,7 +53,6 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com email: " + email));
     }
 
-    // Mantive o método, mas agora o cancelamento principal é no EntregaService
     public Cliente cancelarEntregaPorEmail(String email) {
         throw new CancelamentoInvalidoException("Use o endpoint de /api/entregas/{id}/cancelar para cancelar entregas.");
     }

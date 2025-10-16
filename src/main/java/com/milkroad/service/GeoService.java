@@ -14,7 +14,6 @@ public class GeoService {
     private String googleApiKey;
 
     private final RestTemplate rest;
-    //private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
     public GeoService(RestTemplate rest) {

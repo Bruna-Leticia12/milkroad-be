@@ -19,7 +19,6 @@ public class UsuarioDetailsServiceImpl implements UserDetailsService {
         Cliente cliente = clienteRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
 
-        // Usa a implementação customizada que já garante ROLE_XXX
         return new UsuarioDetails(cliente);
     }
 }

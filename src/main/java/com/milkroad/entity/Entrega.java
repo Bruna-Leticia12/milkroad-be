@@ -18,7 +18,7 @@ public class Entrega {
 
     private LocalDate dataEntrega;
 
-    private boolean confirmada = true; // por padrão, entrega confirmada
+    private boolean confirmada = true;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")

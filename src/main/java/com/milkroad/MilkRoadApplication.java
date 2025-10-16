@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableScheduling // habilita @Scheduled para tarefas automáticas
+@EnableScheduling
 public class MilkRoadApplication {
 
     public static void main(String[] args) {

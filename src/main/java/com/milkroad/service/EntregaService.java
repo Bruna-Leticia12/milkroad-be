@@ -11,6 +11,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EntregaService {
@@ -23,17 +24,25 @@ public class EntregaService {
         this.clienteRepository = clienteRepository;
     }
 
-    // Criar entregas automáticas para o cliente (segunda a sexta a partir de hoje, por 1 mês)
+    /**
+     * Cria entregas automáticas para o cliente (segunda a sexta, por 1 mês)
+     * Ignora automaticamente clientes inativos.
+     */
     public void gerarEntregasAutomaticas(Cliente cliente) {
-        LocalDate hoje = LocalDate.now();
-        LocalDate fim = hoje.plusMonths(1); // gera 1 mês de entregas futuras
+        // Ignora clientes inativos
+        if (cliente == null || !cliente.isAtivo()) {
+            return;
+        }
 
-        Long clienteId = cliente.getId(); // variável final para usar no lambda
+        LocalDate hoje = LocalDate.now();
+        LocalDate fim = hoje.plusMonths(1);
+
+        Long clienteId = cliente.getId();
 
         for (LocalDate data = hoje; data.isBefore(fim); data = data.plusDays(1)) {
             if (data.getDayOfWeek() != DayOfWeek.SATURDAY && data.getDayOfWeek() != DayOfWeek.SUNDAY) {
 
-                final LocalDate dataAtual = data; // ← variável final para usar no lambda
+                final LocalDate dataAtual = data;
 
                 boolean existe = entregaRepository.findByClienteId(clienteId)
                         .stream()
@@ -52,14 +61,30 @@ public class EntregaService {
         }
     }
 
+    /**
+     * Lista entregas de um cliente específico.
+     * Caso o cliente esteja inativo, retorna lista vazia.
+     */
     public List<Entrega> listarEntregasCliente(Long clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId).orElse(null);
+        if (cliente == null || !cliente.isAtivo()) {
+            return List.of();
+        }
         return entregaRepository.findByClienteId(clienteId);
     }
 
+    /**
+     * Lista entregas por data, ignorando clientes inativos.
+     */
     public List<Entrega> listarEntregasPorData(LocalDate data) {
-        return entregaRepository.findByDataEntrega(data);
+        return entregaRepository.findByDataEntrega(data).stream()
+                .filter(e -> e.getCliente() != null && e.getCliente().isAtivo())
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Cancela uma entrega, respeitando as regras de horário.
+     */
     public Entrega cancelarEntrega(Long entregaId) {
         Entrega entrega = entregaRepository.findById(entregaId)
                 .orElseThrow(() -> new RuntimeException("Entrega não encontrada"));
@@ -67,7 +92,6 @@ public class EntregaService {
         LocalDate hoje = LocalDate.now();
         LocalTime agora = LocalTime.now();
 
-        // Se for hoje e já passou das 7h, não pode cancelar
         if (entrega.getDataEntrega().isEqual(hoje) && agora.isAfter(LocalTime.of(7, 0))) {
             throw new RuntimeException("Cancelamento da entrega do dia atual só é permitido até as 07h.");
         }
@@ -77,25 +101,27 @@ public class EntregaService {
     }
 
     /**
-     * Gera automaticamente as entregas do próximo mês todo dia 28 às 02:00 da manhã.
+     * Gera automaticamente as entregas do próximo mês (dia 28 às 02:00).
+     * Apenas para clientes ativos.
      */
-    @Scheduled(cron = "0 0 2 28 * *") // minuto=0, hora=2, dia=28, todo mês
+    @Scheduled(cron = "0 0 2 28 * *")
     public void gerarEntregasProximoMes() {
         LocalDate hoje = LocalDate.now();
         LocalDate primeiroDiaProximoMes = hoje.plusMonths(1).withDayOfMonth(1);
         LocalDate ultimoDiaProximoMes = primeiroDiaProximoMes.withDayOfMonth(primeiroDiaProximoMes.lengthOfMonth());
 
+        // Busca apenas clientes ativos
         List<Cliente> clientes = clienteRepository.findByAtivo(true);
 
         for (Cliente cliente : clientes) {
-            Long clienteId = cliente.getId(); // variável final para usar no lambda
+            Long clienteId = cliente.getId();
 
             LocalDate data = primeiroDiaProximoMes;
             while (!data.isAfter(ultimoDiaProximoMes)) {
 
                 if (data.getDayOfWeek() != DayOfWeek.SATURDAY && data.getDayOfWeek() != DayOfWeek.SUNDAY) {
 
-                    final LocalDate dataAtual = data; // variável final para usar no lambda
+                    final LocalDate dataAtual = data;
 
                     boolean existe = entregaRepository.findByClienteId(clienteId)
                             .stream()
@@ -115,6 +141,6 @@ public class EntregaService {
             }
         }
 
-        System.out.println("Entregas do próximo mês foram geradas automaticamente!");
+        System.out.println("✅ Entregas do próximo mês foram geradas automaticamente (apenas clientes ativos).");
     }
 }

@@ -13,4 +13,5 @@ public class ClienteRequestDTO {
     private String cidade;
     private String cep;
     private String email;
+    private Boolean ativo; // ✅ novo campo para atualizar status ativo/inativo
 }

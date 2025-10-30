@@ -11,7 +11,12 @@ import java.util.Optional;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     boolean existsByCelular(String celular);
 
+    Optional<Cliente> findByNomeIgnoreCase(String nome);
+
     List<Cliente> findByAtivo(boolean ativo);
 
     Optional<Cliente> findByEmail(String email); // usado no login e perfil do cliente
+
+    // ✅ Método opcional para filtrar direto no banco (caso queira usar futuramente)
+    List<Cliente> findByPerfilNot(String perfil);
 }

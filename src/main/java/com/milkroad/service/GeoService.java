@@ -12,7 +12,6 @@ public class GeoService {
 
     @Value("${google.api.key:}")
     private String googleApiKey;
-
     private final RestTemplate rest;
     private final ObjectMapper mapper = new ObjectMapper();
 

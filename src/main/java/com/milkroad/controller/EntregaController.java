@@ -2,10 +2,13 @@ package com.milkroad.controller;
 
 import com.milkroad.dto.EntregaDTO;
 import com.milkroad.entity.Entrega;
+import com.milkroad.entity.Cliente;
+import com.milkroad.entity.Perfil;
 import com.milkroad.service.EntregaService;
+import com.milkroad.service.ClienteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +18,11 @@ import java.util.stream.Collectors;
 public class EntregaController {
 
     private final EntregaService entregaService;
+    private final ClienteService clienteService;
 
-    public EntregaController(EntregaService entregaService) {
+    public EntregaController(EntregaService entregaService, ClienteService clienteService) {
         this.entregaService = entregaService;
+        this.clienteService = clienteService;
     }
 
     private EntregaDTO toDTO(Entrega entrega) {
@@ -59,11 +64,25 @@ public class EntregaController {
     }
 
     @GetMapping("/hoje")
-    public List<EntregaDTO> listarEntregasDeHoje() {
+    public List<EntregaDTO> listarEntregasDeHoje(Principal principal) {
         LocalDate hoje = LocalDate.now();
-        return entregaService.listarEntregasPorData(hoje)
+
+        List<EntregaDTO> entregas = entregaService.listarEntregasPorData(hoje)
                 .stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+        Cliente usuarioLogado = clienteService.buscarPorEmail(principal.getName());
+        entregas = entregas.stream()
+                .filter(e -> {
+                    Cliente clienteEntrega = clienteService.buscarPorNome(e.getClienteNome());
+                    return clienteEntrega != null && clienteEntrega.isAtivo();
+                })
+                .collect(Collectors.toList());
+        if (usuarioLogado.getPerfil() == Perfil.ADMIN) {
+            entregas = entregas.stream()
+                    .filter(e -> !e.getClienteNome().equalsIgnoreCase(usuarioLogado.getNome()))
+                    .collect(Collectors.toList());
+        }
+        return entregas;
     }
 }

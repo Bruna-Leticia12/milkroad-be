@@ -15,11 +15,8 @@ public class Entrega {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private LocalDate dataEntrega;
-
     private boolean confirmada = true;
-
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;

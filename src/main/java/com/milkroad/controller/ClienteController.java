@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,40 +21,38 @@ public class ClienteController {
     @Autowired
     private ClienteService clienteService;
 
-    // ✅ Criar cliente (somente ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ClienteResponseDTO> criarCliente(@RequestBody ClienteRequestDTO dto) {
-        Cliente cliente = new Cliente();
-        cliente.setNome(dto.getNome());
-        cliente.setCelular(dto.getCelular());
-        cliente.setTelefone(dto.getTelefone());
-        cliente.setLogradouro(dto.getLogradouro());
-        cliente.setNumero(dto.getNumero());
-        cliente.setBairro(dto.getBairro());
-        cliente.setCidade(dto.getCidade());
-        cliente.setCep(dto.getCep());
-        cliente.setEmail(dto.getEmail());
-        cliente.setPerfil(Perfil.CLIENTE); // sempre CLIENTE
+
+        Cliente cliente = Cliente.builder()
+                .nome(dto.getNome())
+                .celular(dto.getCelular())
+                .telefone(dto.getTelefone())
+                .logradouro(dto.getLogradouro())
+                .numero(dto.getNumero())
+                .bairro(dto.getBairro())
+                .cidade(dto.getCidade())
+                .cep(dto.getCep())
+                .email(dto.getEmail())
+                .perfil(Perfil.CLIENTE).build();
 
         Cliente novoCliente = clienteService.salvarCliente(cliente);
         ClienteResponseDTO response = mapToResponse(novoCliente);
         return ResponseEntity.ok(response);
     }
 
-    // ✅ Listar todos (ADMIN) — exclui perfis ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ClienteResponseDTO>> listarTodos() {
         List<ClienteResponseDTO> clientes = clienteService.listarClientes()
                 .stream()
-                .filter(c -> c.getPerfil() == Perfil.CLIENTE) // exclui ADMIN
+                .filter(c -> c.getPerfil() == Perfil.CLIENTE)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(clientes);
     }
 
-    // ✅ Listar ativos (ADMIN) — exclui perfis ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/ativos")
     public ResponseEntity<List<ClienteResponseDTO>> listarAtivos() {
@@ -67,7 +64,6 @@ public class ClienteController {
         return ResponseEntity.ok(clientes);
     }
 
-    // ✅ Listar inativos (ADMIN) — exclui perfis ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/inativos")
     public ResponseEntity<List<ClienteResponseDTO>> listarInativos() {
@@ -79,7 +75,6 @@ public class ClienteController {
         return ResponseEntity.ok(clientes);
     }
 
-    // Cliente visualiza os próprios dados
     @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/me")
     public ResponseEntity<ClienteResponseDTO> meusDados(Principal principal) {
@@ -87,7 +82,6 @@ public class ClienteController {
         return ResponseEntity.ok(mapToResponse(cliente));
     }
 
-    // Cliente cancela sua própria entrega
     @PreAuthorize("hasRole('CLIENTE')")
     @PutMapping("/me/cancelar")
     public ResponseEntity<?> cancelarEntrega(Principal principal) {
@@ -99,7 +93,6 @@ public class ClienteController {
         }
     }
 
-    // ✅ Atualizar dados de um cliente (somente ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ClienteResponseDTO> atualizarCliente(
@@ -110,7 +103,6 @@ public class ClienteController {
         return ResponseEntity.ok(mapToResponse(atualizado));
     }
 
-    // ✅ Desativar cliente (somente ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<Void> desativarCliente(@PathVariable Long id) {
@@ -118,7 +110,6 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ Buscar cliente por nome (ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/nome/{nome}")
     public ResponseEntity<ClienteResponseDTO> buscarPorNome(@PathVariable String nome) {
@@ -126,7 +117,6 @@ public class ClienteController {
         return ResponseEntity.ok(mapToResponse(cliente));
     }
 
-    // 🔄 Conversão para DTO
     private ClienteResponseDTO mapToResponse(Cliente c) {
         ClienteResponseDTO dto = new ClienteResponseDTO();
         dto.setId(c.getId());

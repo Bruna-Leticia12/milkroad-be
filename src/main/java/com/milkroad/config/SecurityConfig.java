@@ -18,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-
 import java.util.List;
 
 @Configuration
@@ -37,14 +36,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // habilita CORS com o bean abaixo
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()     // login + registro abertos
-                        .requestMatchers("/api/clientes/**").hasRole("ADMIN") // apenas ADMIN gerencia clientes
-                        .requestMatchers("/api/entregas/**").hasAnyRole("ADMIN", "CLIENTE") // admin e cliente
-                        .requestMatchers("/api/rotas/**").hasRole("ADMIN")   // apenas ADMIN acessa rotas
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/clientes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/entregas/**").hasAnyRole("ADMIN", "CLIENTE")
+                        .requestMatchers("/api/rotas/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

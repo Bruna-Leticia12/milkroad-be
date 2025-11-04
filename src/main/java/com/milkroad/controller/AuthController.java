@@ -31,7 +31,6 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
@@ -61,14 +60,12 @@ public class AuthController {
 
     record ErrorMsg(String status, String message) {}
 
-    // REGISTRO DE ADMIN
     @PostMapping("/register-admin")
     public ResponseEntity<?> registrarAdmin(@RequestBody Cliente admin) {
         if (clienteRepository.findByEmail(admin.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Já existe um usuário com este email.");
         }
 
-        // Senha padrão = últimos 4 dígitos do celular
         if (admin.getCelular() != null && admin.getCelular().length() >= 4) {
             String senha = admin.getCelular().substring(admin.getCelular().length() - 4);
             admin.setSenha(passwordEncoder.encode(senha));

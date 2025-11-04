@@ -12,7 +12,6 @@ import com.milkroad.repository.EntregaRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -28,9 +27,7 @@ public class RouteService {
     private final GeoService geoService;
     private final ClienteRepository clienteRepository;
     private final EntregaRepository entregaRepository;
-
     private final RestTemplate rest;
-    //private final RestTemplate rest = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
     public RouteService(GeoService geoService,
@@ -43,29 +40,21 @@ public class RouteService {
         this.rest = rest;
     }
 
-    /**
-     * Monta rota otimizada para a data informada.
-     * O depot (início/fim) será o primeiro ADMIN ativo encontrado.
-     * Retorna RouteDTO (date, totalDistanceMeters, List<RouteStopDTO>).
-     */
     public RouteDTO buildOptimizedRouteForDate(LocalDate date) {
-        // 1) busca um admin ativo (depot)
         Cliente admin = clienteRepository.findByAtivo(true).stream()
                 .filter(c -> c.getPerfil() == Perfil.ADMIN)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Nenhum ADMIN ativo cadastrado para ser depot."));
-
-        // valida (vai lançar se chave não estiver configurada ou endereço inválido)
         geoService.geocodeCliente(admin);
 
-        // 2) buscar entregas confirmadas do dia
-        List<Entrega> entregasDia = entregaRepository.findByDataEntregaAndConfirmadaTrue(date);
+        List<Entrega> entregasDia = entregaRepository.findByDataEntregaAndConfirmadaTrue(date).stream()
+                .filter(e -> e.getCliente() != null && e.getCliente().isAtivo())
+                .collect(Collectors.toList());
 
         if (entregasDia.isEmpty()) {
             return new RouteDTO(date.toString(), 0.0, Collections.emptyList());
         }
 
-        // 3) montar lista de waypoints e informação associada (preserva ordem original)
         class WaypointInfo {
             final Entrega entrega;
             final Cliente cliente;
@@ -85,20 +74,21 @@ public class RouteService {
         List<WaypointInfo> waypoints = new ArrayList<>();
         for (Entrega e : entregasDia) {
             Cliente c = e.getCliente();
-            double[] coords = geoService.geocodeCliente(c); // geocodifica
+            if (c == null || !c.isAtivo()) continue;
+            double[] coords = geoService.geocodeCliente(c);
             String addr = buildAddress(c);
             waypoints.add(new WaypointInfo(e, c, addr, coords[0], coords[1]));
         }
 
-        // 4) construir URL do Directions API com optimize:true
-        String originEnc = encode(buildAddress(admin));
-        String destEnc = originEnc; // volta ao mesmo admin
-        // cada waypoint precisa ser encode
-        List<String> encodedWps = waypoints.stream()
-                .map(w -> encode(w.address))
-                .collect(Collectors.toList());
+        if (waypoints.isEmpty()) {
+            return new RouteDTO(date.toString(), 0.0, Collections.emptyList());
+        }
 
-        String joinedWps = String.join("|", encodedWps);
+        String originEnc = encode(buildAddress(admin));
+        String destEnc = originEnc;
+        String joinedWps = waypoints.stream()
+                .map(w -> encode(w.address))
+                .collect(Collectors.joining("|"));
 
         String url = "https://maps.googleapis.com/maps/api/directions/json"
                 + "?origin=" + originEnc
@@ -111,45 +101,36 @@ public class RouteService {
             JsonNode root = mapper.readTree(response);
 
             JsonNode routes = root.path("routes");
-            if (!routes.isArray() || routes.size() == 0) {
+            if (!routes.isArray() || routes.isEmpty()) {
                 throw new RuntimeException("Não foi possível calcular rota no Google Directions API.");
             }
 
             JsonNode route = routes.get(0);
             JsonNode legs = route.path("legs");
-            JsonNode waypointOrderNode = route.path("waypoint_order"); // ordem otimizada dos índices dos waypoints
+            JsonNode waypointOrderNode = route.path("waypoint_order");
 
-            // waypointOrderNode é array com tamanho = number of waypoints
             List<Integer> optimizedOrder = new ArrayList<>();
             if (waypointOrderNode.isArray()) {
                 for (JsonNode n : waypointOrderNode) optimizedOrder.add(n.asInt());
             } else {
-                // fallback: se não vier, use ordem original
                 for (int i = 0; i < waypoints.size(); i++) optimizedOrder.add(i);
             }
 
-            // legs: length = waypoints.size() + 1 (orig->wp0, wp0->wp1,... last->dest)
-            // Para cada stop (waypoint) j (0..n-1), a leg index j corresponde à chegada desse stop.
             List<RouteStopDTO> stops = new ArrayList<>();
             double totalDistanceMeters = 0.0;
 
-            //int nWaypoints = waypoints.size();
-            for (int legIdx = 0; legIdx < legs.size(); legIdx++) {
-                JsonNode leg = legs.get(legIdx);
-                double legDistance = leg.path("distance").path("value").asDouble(0.0); // metros
-                totalDistanceMeters += legDistance;
+            for (JsonNode leg : legs) {
+                totalDistanceMeters += leg.path("distance").path("value").asDouble(0.0);
             }
 
-            // montar stops na ordem otimizada
             for (int pos = 0; pos < optimizedOrder.size(); pos++) {
-                int originalIndex = optimizedOrder.get(pos); // índice na lista 'waypoints'
+                int originalIndex = optimizedOrder.get(pos);
                 WaypointInfo wp = waypoints.get(originalIndex);
 
-                // a distância from previous é leg at index pos (origin->first = leg0, etc)
                 JsonNode legForThisStop = legs.get(pos);
                 double distFromPrev = legForThisStop.path("distance").path("value").asDouble(0.0);
 
-                RouteStopDTO stop = new RouteStopDTO(
+                stops.add(new RouteStopDTO(
                         wp.entrega.getId(),
                         wp.cliente.getId(),
                         wp.cliente.getNome(),
@@ -158,14 +139,10 @@ public class RouteService {
                         wp.lng,
                         distFromPrev,
                         pos + 1
-                );
-                stops.add(stop);
+                ));
             }
-            return new RouteDTO(
-                    date.toString(),
-                    totalDistanceMeters,
-                    stops
-            );
+
+            return new RouteDTO(date.toString(), totalDistanceMeters, stops);
 
         } catch (Exception ex) {
             throw new RuntimeException("Erro ao gerar rota otimizada: " + ex.getMessage(), ex);

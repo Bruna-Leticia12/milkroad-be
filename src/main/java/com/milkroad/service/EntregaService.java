@@ -52,6 +52,22 @@ public class EntregaService {
         }
     }
 
+    public void desativarEntregasFuturas(Long clienteId) {
+
+        LocalDate hoje = LocalDate.now();
+
+        List<Entrega> entregas = entregaRepository.findByClienteId(clienteId)
+                .stream()
+                .filter(e -> e.getDataEntrega().isAfter(hoje))
+                .collect(Collectors.toList());
+
+        for (Entrega e : entregas) {
+            e.setConfirmada(false);
+            entregaRepository.save(e);
+        }
+    }
+
+
     public List<Entrega> listarEntregasCliente(Long clienteId) {
         Cliente cliente = clienteRepository.findById(clienteId).orElse(null);
         if (cliente == null || !cliente.isAtivo()) {

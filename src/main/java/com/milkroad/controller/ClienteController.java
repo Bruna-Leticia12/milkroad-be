@@ -35,6 +35,7 @@ public class ClienteController {
                 .cidade(dto.getCidade())
                 .cep(dto.getCep())
                 .email(dto.getEmail())
+                .ativo(dto.getAtivo() != null ? dto.getAtivo() : true)
                 .perfil(Perfil.CLIENTE).build();
 
         Cliente novoCliente = clienteService.salvarCliente(cliente);

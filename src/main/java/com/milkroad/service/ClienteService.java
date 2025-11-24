@@ -28,9 +28,13 @@ public class ClienteService {
             cliente.setSenha(passwordEncoder.encode(senha));
         }
 
+        cliente.setAtivo(cliente.isAtivo());
+
         Cliente salvo = clienteRepository.save(cliente);
 
-        entregaService.gerarEntregasAutomaticas(salvo);
+        if (salvo.isAtivo()) {
+            entregaService.gerarEntregasAutomaticas(salvo);
+        }
 
         return salvo;
     }
@@ -72,6 +76,8 @@ public class ClienteService {
         Cliente existente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado."));
 
+        boolean estavaAtivo = existente.isAtivo();
+
         existente.setNome(dto.getNome());
         existente.setCelular(dto.getCelular());
         existente.setTelefone(dto.getTelefone());
@@ -85,7 +91,18 @@ public class ClienteService {
         if (dto.getAtivo() != null) {
             existente.setAtivo(dto.getAtivo());
         }
-        return clienteRepository.save(existente);
+
+        Cliente atualizado = clienteRepository.save(existente);
+
+        if (!estavaAtivo && atualizado.isAtivo()) {
+            entregaService.gerarEntregasAutomaticas(atualizado);
+        }
+
+        if (estavaAtivo && !atualizado.isAtivo()) {
+            entregaService.desativarEntregasFuturas(atualizado.getId());
+        }
+
+        return atualizado;
     }
 
     public void desativarCliente(Long id) {
@@ -93,6 +110,8 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado."));
         cliente.setAtivo(false);
         clienteRepository.save(cliente);
+
+        entregaService.desativarEntregasFuturas(id);
     }
 
     public Cliente buscarPorNome(String nome) {
